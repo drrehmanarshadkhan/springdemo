@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.thg.accelerator.SpringDemo.TaskControllerTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.415 s - in com.thg.accelerator.SpringDemo.TaskControllerTest

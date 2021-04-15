@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">SpringDemo</a> &gt; <a href="index.source.html" class="el_package">skillshare.course.SpringDemo.controller</a> &gt; <span class="el_source">TaskController.java</span></div><h1>TaskController.java</h1><pre class="source lang-java linenums">package skillshare.course.SpringDemo.controller;
+
+import skillshare.course.SpringDemo.event.TasksJson;
+import skillshare.course.SpringDemo.exceptions.ServiceException;
+import skillshare.course.SpringDemo.model.Tasks;
+import skillshare.course.SpringDemo.service.TaskService;
+import skillshare.course.SpringDemo.transformer.TaskTransformer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+import java.util.List;
+import java.util.UUID;
+
+
+@RestController
+<span class="fc" id="L23">public class TaskController {</span>
+
+
+<span class="fc" id="L26">  private static final Logger logger = LoggerFactory.getLogger(TaskController.class);</span>
+  @Autowired
+  TaskService taskService;
+  @Autowired
+  TaskTransformer taskTransformer;
+
+  @RequestMapping(value = &quot;/users&quot;, method = RequestMethod.GET)
+  public String greet() {
+<span class="nc" id="L34">    return &quot;Hello World&quot;;</span>
+  }
+
+  @RequestMapping(value = &quot;/users/tasks&quot;, method = RequestMethod.GET)
+  public ResponseEntity&lt;List&lt;TasksJson&gt;&gt; getTasks() {
+    try {
+<span class="nc" id="L40">      List&lt;Tasks&gt; listOfTasks = taskService.getTasks();</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">      if (listOfTasks.size() == 0) {</span>
+<span class="nc" id="L42">        return new ResponseEntity(&quot;no results found&quot;, HttpStatus.OK);</span>
+      }
+
+<span class="nc" id="L45">      List&lt;TasksJson&gt; taskJson = taskTransformer.toJsonList(listOfTasks);</span>
+<span class="nc" id="L46">      return new ResponseEntity(taskJson, HttpStatus.OK);</span>
+
+<span class="nc" id="L48">    } catch (ServiceException e) {</span>
+<span class="nc" id="L49">      logger.error(&quot;internal server error in getting all listings&quot;, e);</span>
+<span class="nc" id="L50">      return new ResponseEntity&lt;&gt;(HttpStatus.INTERNAL_SERVER_ERROR);</span>
+    }
+  }
+
+  @RequestMapping(value = &quot;/users/tasks/{id}&quot;, method = RequestMethod.GET)
+  public ResponseEntity&lt;TasksJson&gt; getTaskById(@PathVariable(&quot;id&quot;) UUID id) {
+
+    try {
+<span class="fc" id="L58">      Tasks task = taskService.getTaskById(id);</span>
+<span class="fc" id="L59">      TasksJson tasksJson = taskTransformer.toJson(task);</span>
+<span class="fc" id="L60">      return new ResponseEntity&lt;&gt;(tasksJson, HttpStatus.OK);</span>
+
+<span class="nc" id="L62">    } catch (ServiceException e) {</span>
+<span class="nc" id="L63">      logger.error(&quot;bad request in getting task by ID&quot;, id, e);</span>
+<span class="nc" id="L64">      return new ResponseEntity&lt;&gt;(HttpStatus.BAD_REQUEST);</span>
+    }
+  }
+  //  @RequestMapping(value = &quot;/users/tasks/hateos/{id}&quot;, method = RequestMethod.GET)
+//  public org.springframework.hateoas.Resource&lt;TasksJson&gt; getTaskByIdHATEOS(@PathVariable UUID id) throws ServiceException {
+//    Tasks task = null;
+//    task = taskService.getTaskById(id);
+//    if (task == null) {
+//      throw new RuntimeException(&quot;ID does not exist&quot;);
+//    }
+//    TasksJson tasksJson = taskTransformer.toJson(task);
+//    org.springframework.hateoas.Resource&lt;TasksJson&gt; myTasks = new org.springframework.hateoas.Resource&lt;TasksJson&gt;(tasksJson);
+//    ControllerLinkBuilder myLink = ControllerLinkBuilder.linkTo(methodOn(this.getClass()).getTasks());
+//    ControllerLinkBuilder myLink1 = ControllerLinkBuilder.linkTo(methodOn(this.getClass()).getTaskById(id));
+//    myTasks.add(myLink.withRel(&quot;parent&quot;));
+//    myTasks.add(myLink1.withSelfRel());
+//    return myTasks;
+//
+//  }
+
+
+  @RequestMapping(value = &quot;/task&quot;, method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity&lt;Tasks&gt; createTask(@RequestBody TasksJson task) throws ServiceException {
+<span class="nc" id="L87">    UUID uuid = UUID.randomUUID();</span>
+<span class="nc" id="L88">    Tasks modelTask = taskTransformer.fromJson(task);</span>
+<span class="nc" id="L89">    UUID id = taskService.createTask(modelTask, uuid);</span>
+<span class="nc" id="L90">    URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path(&quot;/{id}&quot;).buildAndExpand(id).toUri();</span>
+<span class="nc" id="L91">    return ResponseEntity.created(uri).build();</span>
+  }
+
+  @RequestMapping(value = &quot;/task/{id}&quot;, method = RequestMethod.DELETE)
+  public ResponseEntity&lt;Void&gt; deleteTask(@PathVariable(&quot;id&quot;) UUID id) throws ServiceException {
+<span class="nc" id="L96">    taskService.deleteTask(id);</span>
+<span class="nc" id="L97">    return new ResponseEntity&lt;&gt;(HttpStatus.NOT_FOUND);</span>
+  }
+
+  @RequestMapping(value = &quot;/tasks&quot;, method = RequestMethod.DELETE)
+  public ResponseEntity&lt;Void&gt; deleteAllTasks() throws ServiceException {
+<span class="nc" id="L102">    taskService.deleteAllTasks();</span>
+<span class="nc" id="L103">    return new ResponseEntity&lt;&gt;(HttpStatus.NOT_FOUND);</span>
+  }
+
+
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

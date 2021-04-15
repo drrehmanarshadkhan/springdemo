@@ -1,0 +1,21 @@
+version: '3'
+services:
+#  myservice:
+#    build: .
+#    depends_on: ["db"]
+#    container_name: "SpringDemo"
+#    ports:
+#      - "8080:8080"
+  db:
+    image: "postgres"
+    container_name: "my_postgres"
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=demotask
+      - POSTGRES_HOST_AUTH_METHOD= trust
+    volumes:
+      - ./src/main/resources/sql:/docker-entrypoint-initdb.d/
+      - ./postgres-data:/var/lib/postgresql/data
