@@ -1,11 +1,15 @@
 version: '3'
 services:
-#  myservice:
-#    build: .
-#    depends_on: ["db"]
-#    container_name: "SpringDemo"
-#    ports:
-#      - "8080:8080"
+  #  myservice:
+  #    build: .
+  #    depends_on: ["db"]
+  #    container_name: "SpringDemo"
+  #    ports:
+  #      - "8080:8080"
+  #    environment:
+  #      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/demotask
+
+
   db:
     image: "postgres"
     container_name: "my_postgres"
@@ -19,3 +23,30 @@ services:
     volumes:
       - ./src/main/resources/sql:/docker-entrypoint-initdb.d/
       - ./postgres-data:/var/lib/postgresql/data
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: always
+    ports:
+      - 3000:3000
+    networks:
+      - grafana-net
+    volumes:
+      - grafana-volume
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    networks:
+      - grafana-net
+
+
+
+networks:
+  grafana-net:
